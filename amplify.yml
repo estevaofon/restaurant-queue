@@ -14,8 +14,29 @@ frontend:
     build:
       commands:
         - echo "Building static assets..."
-        - echo "Copying files to build directory..."
-        # Não é necessário processo de build para HTML/CSS/JS puro
+        - echo "Configuring environment variables..."
+        # Criar arquivo env.js dinâmico com variáveis do Amplify
+        - |
+          if [ ! -z "$API_URL" ]; then
+            echo "Configurando API_URL: $API_URL"
+            cat > frontend/env.js << EOF
+          window.ENV = {
+            API_URL: '$API_URL',
+            STAGE: '${STAGE:-prod}',
+            REGION: '${AWS_DEFAULT_REGION:-us-east-1}',
+            DEBUG: ${DEBUG:-false},
+            AUTO_REFRESH_INTERVAL: ${AUTO_REFRESH_INTERVAL:-30000},
+            FEATURES: {
+              REAL_TIME_UPDATES: true,
+              NOTIFICATIONS: true,
+              ANALYTICS: ${ANALYTICS:-false}
+            }
+          };
+          console.log('✅ Environment configurado via Amplify:', window.ENV);
+          EOF
+          else
+            echo "Usando configuração padrão do frontend/env.js"
+          fi
         
     # Fase pós-construção - otimizações finais
     postBuild:
@@ -26,7 +47,7 @@ frontend:
   # Artefatos a serem publicados
   artifacts:
     # Pasta raiz dos arquivos estáticos
-    baseDirectory: public
+    baseDirectory: frontend
     files:
       - '**/*'
 

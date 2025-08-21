@@ -111,10 +111,10 @@ resources:
       Export:
         Name: ${self:service}-${self:provider.stage}-TableName
 
-# Plugins úteis
-plugins:
-  - serverless-python-requirements  # Gerencia dependências Python
-  - serverless-offline              # Teste local
+# Plugins úteis (temporariamente desabilitados para resolver conflito)
+# plugins:
+#   - serverless-python-requirements  # Gerencia dependências Python
+#   - serverless-offline              # Teste local
 
 # Configuração para Python requirements
 custom:

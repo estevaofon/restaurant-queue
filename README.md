@@ -56,9 +56,14 @@ serverless deploy --stage prod
 #    - Selecionar branch principal
 #    - O build será configurado automaticamente via amplify.yml
 
-# 2. Configurar API no frontend:
-#    - Editar public/config.js com a URL da API Gateway
-#    - Fazer commit e push (Amplify redeploy automático)
+# 2. Configurar variáveis de ambiente:
+#    - App Settings → Environment Variables
+#    - Adicionar: API_URL = https://sua-api.execute-api.region.amazonaws.com/stage
+#    - (Opcional) STAGE, DEBUG, etc.
+
+# 3. Deploy automático:
+#    - Push para branch principal
+#    - Amplify fará build e deploy automaticamente
 ```
 
 ## 📊 Gerenciamento da Tabela DynamoDB
@@ -127,7 +132,7 @@ O sistema usa as seguintes variáveis de ambiente:
 restaurant-queue/
 ├── handlers/           # Funções Lambda (Backend)
 │   └── handler.py     # Handlers da API
-├── public/            # Frontend Web (AWS Amplify)
+├── frontend/          # Frontend Web (AWS Amplify)
 │   ├── index.html     # Interface principal
 │   ├── styles.css     # Estilos modernos
 │   ├── script.js      # Lógica JavaScript

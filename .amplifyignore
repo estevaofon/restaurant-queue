@@ -74,3 +74,6 @@ serverless.yml
 create_table.py
 main.py
 handlers/
+
+# Arquivo env.js será gerado dinamicamente no build
+# frontend/env.js

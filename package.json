@@ -10,7 +10,8 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "serverless-offline": "^14.4.0",
+    "serverless": "^3.40.0",
+    "serverless-offline": "^13.8.0",
     "serverless-python-requirements": "^6.1.2"
   }
 }
