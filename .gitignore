@@ -44,6 +44,5 @@ public/build/
 Thumbs.db
 
 # Configurações locais com URLs sensíveis
-frontend/env.js
 frontend/env.local.js
 .env.local
