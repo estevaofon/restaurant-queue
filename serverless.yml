@@ -115,7 +115,6 @@ resources:
 plugins:
   - serverless-python-requirements  # Gerencia dependências Python
   - serverless-offline              # Teste local
-  - serverless-domain-manager       # Domínio customizado (opcional)
 
 # Configuração para Python requirements
 custom:
@@ -128,13 +127,6 @@ custom:
     httpPort: 3000
     websocketPort: 3001
     lambdaPort: 3002
-  
-  # Domínio customizado (opcional)
-  customDomain:
-    domainName: api.restaurant-queue.com  # Seu domínio
-    stage: ${self:provider.stage}
-    createRoute53Record: true
-    enabled: false  # Mude para true se tiver um domínio
 
 # Configuração de pacote
 package:
