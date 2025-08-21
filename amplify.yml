@@ -1,0 +1,42 @@
+# AWS Amplify Build Configuration
+# Este arquivo configura como o AWS Amplify deve construir e hospedar a aplicação
+
+version: 1
+frontend:
+  phases:
+    # Fase de pré-construção - instalar dependências se necessário
+    preBuild:
+      commands:
+        - echo "Starting build process..."
+        - echo "No build dependencies required for static HTML/CSS/JS"
+    
+    # Fase de construção - preparar arquivos estáticos
+    build:
+      commands:
+        - echo "Building static assets..."
+        - echo "Copying files to build directory..."
+        # Não é necessário processo de build para HTML/CSS/JS puro
+        
+    # Fase pós-construção - otimizações finais
+    postBuild:
+      commands:
+        - echo "Build completed successfully!"
+        - echo "Static files ready for deployment"
+
+  # Artefatos a serem publicados
+  artifacts:
+    # Pasta raiz dos arquivos estáticos
+    baseDirectory: public
+    files:
+      - '**/*'
+
+  # Cache para otimizar builds subsequentes (opcional para projeto estático)
+  cache:
+    paths: []
+
+# Configurações de ambiente (opcional)
+# Você pode definir variáveis de ambiente aqui se necessário
+# environment:
+#   variables:
+#     API_URL: https://your-api-gateway-url.com
+#     STAGE: production

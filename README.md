@@ -38,7 +38,7 @@ uv run create_table.py --stage prod --region us-east-1
 uv run create_table.py --stage dev --delete
 ```
 
-### 4. Deploy da Aplicação
+### 4. Deploy da API (Backend)
 
 ```bash
 # Deploy para desenvolvimento
@@ -46,6 +46,19 @@ serverless deploy --stage dev
 
 # Deploy para produção
 serverless deploy --stage prod
+```
+
+### 5. Deploy do Frontend (AWS Amplify)
+
+```bash
+# 1. No AWS Amplify Console:
+#    - Conectar ao repositório Git
+#    - Selecionar branch principal
+#    - O build será configurado automaticamente via amplify.yml
+
+# 2. Configurar API no frontend:
+#    - Editar public/config.js com a URL da API Gateway
+#    - Fazer commit e push (Amplify redeploy automático)
 ```
 
 ## 📊 Gerenciamento da Tabela DynamoDB
@@ -112,11 +125,18 @@ O sistema usa as seguintes variáveis de ambiente:
 
 ```
 restaurant-queue/
-├── handlers/           # Funções Lambda
-│   └── handler.py     # Handlers da fila
+├── handlers/           # Funções Lambda (Backend)
+│   └── handler.py     # Handlers da API
+├── public/            # Frontend Web (AWS Amplify)
+│   ├── index.html     # Interface principal
+│   ├── styles.css     # Estilos modernos
+│   ├── script.js      # Lógica JavaScript
+│   ├── config.js      # Configuração da API
+│   └── README.md      # Docs do frontend
 ├── create_table.py    # Script para gerenciar tabela DynamoDB
 ├── main.py           # Ponto de entrada (se necessário)
 ├── serverless.yml    # Configuração do Serverless Framework
+├── amplify.yml       # Configuração do AWS Amplify
 ├── pyproject.toml    # Configuração do Python/uv
 └── README.md         # Esta documentação
 ```

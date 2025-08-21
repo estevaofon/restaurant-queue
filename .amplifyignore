@@ -1,0 +1,76 @@
+# Amplify Ignore File
+# Especifica quais arquivos/pastas devem ser ignorados durante o build do Amplify
+
+# Arquivos do sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependências Python (não necessárias para frontend)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+
+# Serverless
+.serverless/
+node_modules/
+package-lock.json
+package.json
+
+# Arquivos de configuração local
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Ferramentas de desenvolvimento
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Arquivos do Git
+.git/
+.gitignore
+
+# Documentação desnecessária para build
+README.md
+*.md
+
+# Arquivos Python do backend (não necessários para frontend)
+*.py
+pyproject.toml
+uv.lock
+
+# Configurações do Serverless Framework
+serverless.yml
+
+# Scripts de desenvolvimento
+create_table.py
+main.py
+handlers/

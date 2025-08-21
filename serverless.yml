@@ -34,7 +34,7 @@ provider:
 functions:
   # Criar entrada na fila
   createQueue:
-    handler: handlers/queue.create
+    handler: handlers/handler.create
     description: Adicionar cliente à fila
     events:
       - http:
@@ -44,7 +44,7 @@ functions:
   
   # Listar fila
   getQueue:
-    handler: handlers/queue.list
+    handler: handlers/handler.list
     description: Listar todos os clientes na fila
     events:
       - http:
@@ -59,7 +59,7 @@ functions:
   
   # Atualizar status
   updateQueue:
-    handler: handlers/queue.update
+    handler: handlers/handler.update
     description: Atualizar status do cliente
     events:
       - http:
@@ -73,7 +73,7 @@ functions:
   
   # Remover da fila
   deleteQueue:
-    handler: handlers/queue.delete
+    handler: handlers/handler.delete
     description: Remover cliente da fila
     events:
       - http:

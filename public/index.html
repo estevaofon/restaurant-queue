@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sistema de Fila Digital para Restaurantes - Gerencie sua fila de clientes de forma eficiente">
+    <title>Fila Digital - Restaurante</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍽️</text></svg>">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+    
+    <!-- Config -->
+    <script src="config.js"></script>
+    
+    <!-- Font Awesome para ícones -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-utensils"></i>
+                <h1>Fila Digital</h1>
+            </div>
+            <nav class="nav">
+                <button id="refreshBtn" class="btn btn-secondary">
+                    <i class="fas fa-sync-alt"></i>
+                    Atualizar
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main">
+        <div class="container">
+            <!-- Status da Fila -->
+            <section class="queue-status">
+                <div class="status-card">
+                    <h2><i class="fas fa-clock"></i> Status da Fila</h2>
+                    <div class="status-grid">
+                        <div class="status-item">
+                            <span class="status-number" id="totalInQueue">-</span>
+                            <span class="status-label">Na Fila</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-number" id="estimatedWait">-</span>
+                            <span class="status-label">Tempo Estimado</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-number" id="servedToday">-</span>
+                            <span class="status-label">Atendidos Hoje</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Formulário para Entrar na Fila -->
+            <section class="join-queue">
+                <div class="form-card">
+                    <h2><i class="fas fa-user-plus"></i> Entrar na Fila</h2>
+                    <form id="joinQueueForm">
+                        <div class="form-group">
+                            <label for="customerName">
+                                <i class="fas fa-user"></i>
+                                Nome do Cliente
+                            </label>
+                            <input 
+                                type="text" 
+                                id="customerName" 
+                                name="customerName" 
+                                required 
+                                placeholder="Digite seu nome completo"
+                                maxlength="100"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="phoneNumber">
+                                <i class="fas fa-phone"></i>
+                                Telefone (opcional)
+                            </label>
+                            <input 
+                                type="tel" 
+                                id="phoneNumber" 
+                                name="phoneNumber" 
+                                placeholder="(11) 99999-9999"
+                                pattern="[0-9\s\(\)\-\+]+"
+                            >
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="partySize">
+                                <i class="fas fa-users"></i>
+                                Número de Pessoas
+                            </label>
+                            <select id="partySize" name="partySize" required>
+                                <option value="">Selecione...</option>
+                                <option value="1">1 pessoa</option>
+                                <option value="2">2 pessoas</option>
+                                <option value="3">3 pessoas</option>
+                                <option value="4">4 pessoas</option>
+                                <option value="5">5 pessoas</option>
+                                <option value="6">6 pessoas</option>
+                                <option value="7">7 pessoas</option>
+                                <option value="8">8+ pessoas</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <i class="fas fa-plus-circle"></i>
+                            Entrar na Fila
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Lista da Fila -->
+            <section class="queue-list">
+                <div class="list-card">
+                    <div class="list-header">
+                        <h2><i class="fas fa-list"></i> Fila Atual</h2>
+                        <div class="list-controls">
+                            <select id="statusFilter" class="filter-select">
+                                <option value="">Todos os Status</option>
+                                <option value="waiting">Aguardando</option>
+                                <option value="called">Chamado</option>
+                                <option value="seated">Sentado</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div id="queueContainer" class="queue-container">
+                        <div class="loading" id="loadingSpinner">
+                            <i class="fas fa-spinner fa-spin"></i>
+                            Carregando fila...
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Modal para Editar Cliente -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-edit"></i> Editar Cliente</h3>
+                <button class="modal-close" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editCustomerId">
+                    
+                    <div class="form-group">
+                        <label for="editCustomerName">Nome do Cliente</label>
+                        <input type="text" id="editCustomerName" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editPhoneNumber">Telefone</label>
+                        <input type="tel" id="editPhoneNumber">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editPartySize">Número de Pessoas</label>
+                        <select id="editPartySize" required>
+                            <option value="1">1 pessoa</option>
+                            <option value="2">2 pessoas</option>
+                            <option value="3">3 pessoas</option>
+                            <option value="4">4 pessoas</option>
+                            <option value="5">5 pessoas</option>
+                            <option value="6">6 pessoas</option>
+                            <option value="7">7 pessoas</option>
+                            <option value="8">8+ pessoas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="editStatus">Status</label>
+                        <select id="editStatus" required>
+                            <option value="waiting">Aguardando</option>
+                            <option value="called">Chamado</option>
+                            <option value="seated">Sentado</option>
+                            <option value="cancelled">Cancelado</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelEdit">
+                    Cancelar
+                </button>
+                <button type="submit" form="editForm" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    Salvar Alterações
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2024 Fila Digital. Sistema de gerenciamento de filas para restaurantes.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

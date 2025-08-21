@@ -34,28 +34,23 @@ def create(event, context):
         body = json.loads(event['body'])
         
         # Validação básica
-        if not all(k in body for k in ['customerName', 'partySize', 'phoneNumber']):
+        if not all(k in body for k in ['name', 'partySize']):
             return {
                 'statusCode': 400,
                 'headers': get_headers(),
-                'body': json.dumps({'error': 'Campos obrigatórios: customerName, partySize, phoneNumber'})
+                'body': json.dumps({'error': 'Campos obrigatórios: name, partySize'})
             }
         
         # Criar entrada
         now = datetime.utcnow()
         queue_entry = {
-            'id': str(uuid.uuid4()),
-            'queueNumber': f"Q{now.strftime('%H%M')}-{random.randint(100,999)}",
-            'customerName': body['customerName'],
+            'id': body.get('id', str(uuid.uuid4())),
+            'name': body['name'],
             'partySize': int(body['partySize']),
-            'phoneNumber': body['phoneNumber'],
-            'specialRequest': body.get('specialRequest', ''),
-            'status': 'waiting',
-            'checkInTime': now.isoformat(),
-            'estimatedWaitTime': calculate_wait_time(int(body['partySize'])),
-            'createdAt': now.isoformat(),
-            'updatedAt': now.isoformat(),
-            'ttl': int((now + timedelta(days=30)).timestamp())  # Auto-delete após 30 dias
+            'phone': body.get('phone', ''),
+            'status': 'waiting',  # Sempre inicia como 'waiting'
+            'checkInTime': now.isoformat(),  # Sempre calculado no servidor
+            'ttl': int((now + timedelta(days=30)).timestamp())  # TTL sempre calculado
         }
         
         # Salvar no DynamoDB
@@ -64,10 +59,7 @@ def create(event, context):
         return {
             'statusCode': 201,
             'headers': get_headers(),
-            'body': json.dumps({
-                'message': 'Cliente adicionado à fila com sucesso!',
-                'data': queue_entry
-            }, default=decimal_default)
+            'body': json.dumps(queue_entry, default=decimal_default)
         }
         
     except Exception as e:
@@ -119,8 +111,7 @@ def list(event, context):
             'statusCode': 200,
             'headers': get_headers(),
             'body': json.dumps({
-                'data': items,
-                'statistics': stats,
+                'items': items,
                 'count': len(items)
             }, default=decimal_default)
         }
@@ -140,34 +131,50 @@ def update(event, context):
         body = json.loads(event['body'])
         
         # Preparar atualização
-        update_expr = "SET updatedAt = :now"
-        expr_values = {':now': datetime.utcnow().isoformat()}
+        update_expr = "SET "
+        expr_values = {}
+        expr_names = {}
+        updates = []
         
-        if 'status' in body:
-            update_expr += ", #status = :status"
-            expr_values[':status'] = body['status']
-            
-            # Se foi atendido, registrar horário
-            if body['status'] == 'seated':
-                update_expr += ", seatedTime = :seated"
-                expr_values[':seated'] = datetime.utcnow().isoformat()
+        # Campos permitidos para atualização
+        allowed_fields = ['name', 'phone', 'partySize', 'status']
+        
+        for field in allowed_fields:
+            if field in body:
+                if field == 'status':
+                    updates.append("#status = :status")
+                    expr_names['#status'] = 'status'
+                    expr_values[':status'] = body[field]
+                else:
+                    updates.append(f"{field} = :{field}")
+                    expr_values[f':{field}'] = body[field]
+        
+        if not updates:
+            return {
+                'statusCode': 400,
+                'headers': get_headers(),
+                'body': json.dumps({'error': 'Nenhum campo válido para atualização'})
+            }
+        
+        update_expr += ", ".join(updates)
         
         # Atualizar no DynamoDB
-        response = table.update_item(
-            Key={'id': queue_id},
-            UpdateExpression=update_expr,
-            ExpressionAttributeNames={'#status': 'status'} if 'status' in body else {},
-            ExpressionAttributeValues=expr_values,
-            ReturnValues='ALL_NEW'
-        )
+        update_params = {
+            'Key': {'id': queue_id},
+            'UpdateExpression': update_expr,
+            'ExpressionAttributeValues': expr_values,
+            'ReturnValues': 'ALL_NEW'
+        }
+        
+        if expr_names:
+            update_params['ExpressionAttributeNames'] = expr_names
+            
+        response = table.update_item(**update_params)
         
         return {
             'statusCode': 200,
             'headers': get_headers(),
-            'body': json.dumps({
-                'message': 'Status atualizado com sucesso!',
-                'data': response['Attributes']
-            }, default=decimal_default)
+            'body': json.dumps(response['Attributes'], default=decimal_default)
         }
         
     except Exception as e:
@@ -190,8 +197,8 @@ def delete(event, context):
             'statusCode': 200,
             'headers': get_headers(),
             'body': json.dumps({
-                'message': 'Cliente removido da fila',
-                'deletedId': queue_id
+                'success': True,
+                'id': queue_id
             })
         }
         
@@ -202,10 +209,3 @@ def delete(event, context):
             'headers': get_headers(),
             'body': json.dumps({'error': 'Erro ao remover'})
         }
-
-def calculate_wait_time(party_size):
-    """Calcular tempo estimado de espera"""
-    base_time = 15
-    size_factor = 1.5 if party_size > 4 else 1.2 if party_size > 2 else 1.0
-    random_factor = random.randint(0, 10)
-    return int(base_time * size_factor + random_factor)
