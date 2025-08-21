@@ -1,0 +1,148 @@
+# serverless.yml - Configuração completa do projeto
+# Deploy com apenas: serverless deploy
+
+service: restaurant-queue-system
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: python3.11
+  region: us-east-1
+  stage: ${opt:stage, 'dev'}
+  
+  # Variáveis de ambiente globais
+  environment:
+    TABLE_NAME: ${self:service}-${self:provider.stage}
+    STAGE: ${self:provider.stage}
+  
+  # Permissões IAM para todas as funções
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+            - dynamodb:Scan
+            - dynamodb:Query
+          Resource:
+            - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.TABLE_NAME}
+
+# Funções Lambda
+functions:
+  # Criar entrada na fila
+  createQueue:
+    handler: handlers/queue.create
+    description: Adicionar cliente à fila
+    events:
+      - http:
+          path: queue
+          method: post
+          cors: true
+  
+  # Listar fila
+  getQueue:
+    handler: handlers/queue.list
+    description: Listar todos os clientes na fila
+    events:
+      - http:
+          path: queue
+          method: get
+          cors: true
+          request:
+            parameters:
+              querystrings:
+                status: false
+                limit: false
+  
+  # Atualizar status
+  updateQueue:
+    handler: handlers/queue.update
+    description: Atualizar status do cliente
+    events:
+      - http:
+          path: queue/{id}
+          method: put
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  
+  # Remover da fila
+  deleteQueue:
+    handler: handlers/queue.delete
+    description: Remover cliente da fila
+    events:
+      - http:
+          path: queue/{id}
+          method: delete
+          cors: true
+          request:
+            parameters:
+              paths:
+                id: true
+  
+
+
+# Recursos AWS (tabela DynamoDB agora é criada via script Python)
+resources:
+  # Outputs para usar no frontend
+  Outputs:
+    ApiUrl:
+      Description: URL da API Gateway
+      Value:
+        Fn::Join:
+          - ''
+          - - 'https://'
+            - Ref: ApiGatewayRestApi
+            - '.execute-api.'
+            - ${self:provider.region}
+            - '.amazonaws.com/'
+            - ${self:provider.stage}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-ApiUrl
+    
+    TableName:
+      Description: Nome da tabela DynamoDB
+      Value: ${self:provider.environment.TABLE_NAME}
+      Export:
+        Name: ${self:service}-${self:provider.stage}-TableName
+
+# Plugins úteis
+plugins:
+  - serverless-python-requirements  # Gerencia dependências Python
+  - serverless-offline              # Teste local
+  - serverless-domain-manager       # Domínio customizado (opcional)
+
+# Configuração para Python requirements
+custom:
+  pythonRequirements:
+    dockerizePip: false
+    slim: true
+    
+  # Configuração para teste local
+  serverless-offline:
+    httpPort: 3000
+    websocketPort: 3001
+    lambdaPort: 3002
+  
+  # Domínio customizado (opcional)
+  customDomain:
+    domainName: api.restaurant-queue.com  # Seu domínio
+    stage: ${self:provider.stage}
+    createRoute53Record: true
+    enabled: false  # Mude para true se tiver um domínio
+
+# Configuração de pacote
+package:
+  individually: false
+  patterns:
+    - '!.git/**'
+    - '!.venv/**'
+    - '!node_modules/**'
+    - '!.serverless/**'
+    - '!tests/**'
+    - '!*.md'
