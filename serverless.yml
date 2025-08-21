@@ -34,8 +34,9 @@ provider:
 functions:
   # Handler único consolidado para todas as operações da fila
   queueHandler:
+    name: queueHandler-${self:provider.stage}
     handler: handlers/handler.lambda_handler
-    description: Handler consolidado para gerenciar toda a fila de restaurante
+    description: Handler principal para gerenciar toda a fila de restaurante
     events:
       # Criar entrada na fila
       - http:
