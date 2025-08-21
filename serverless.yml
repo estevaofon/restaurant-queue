@@ -32,21 +32,18 @@ provider:
 
 # Funções Lambda
 functions:
-  # Criar entrada na fila
-  createQueue:
-    handler: handlers/handler.create
-    description: Adicionar cliente à fila
+  # Handler único consolidado para todas as operações da fila
+  queueHandler:
+    handler: handlers/handler.lambda_handler
+    description: Handler consolidado para gerenciar toda a fila de restaurante
     events:
+      # Criar entrada na fila
       - http:
           path: queue
           method: post
           cors: true
-  
-  # Listar fila
-  getQueue:
-    handler: handlers/handler.list
-    description: Listar todos os clientes na fila
-    events:
+      
+      # Listar fila
       - http:
           path: queue
           method: get
@@ -56,12 +53,8 @@ functions:
               querystrings:
                 status: false
                 limit: false
-  
-  # Atualizar status
-  updateQueue:
-    handler: handlers/handler.update
-    description: Atualizar status do cliente
-    events:
+      
+      # Atualizar status
       - http:
           path: queue/{id}
           method: put
@@ -70,12 +63,8 @@ functions:
             parameters:
               paths:
                 id: true
-  
-  # Remover da fila
-  deleteQueue:
-    handler: handlers/handler.delete
-    description: Remover cliente da fila
-    events:
+      
+      # Remover da fila
       - http:
           path: queue/{id}
           method: delete
@@ -84,6 +73,16 @@ functions:
             parameters:
               paths:
                 id: true
+      
+      # Suporte para preflight CORS
+      - http:
+          path: queue
+          method: options
+          cors: true
+      - http:
+          path: queue/{id}
+          method: options
+          cors: true
   
 
 
@@ -111,10 +110,10 @@ resources:
       Export:
         Name: ${self:service}-${self:provider.stage}-TableName
 
-# Plugins úteis (temporariamente desabilitados para resolver conflito)
-# plugins:
-#   - serverless-python-requirements  # Gerencia dependências Python
-#   - serverless-offline              # Teste local
+# Plugins úteis
+plugins:
+  - serverless-python-requirements  # Gerencia dependências Python
+  - serverless-offline              # Teste local
 
 # Configuração para Python requirements
 custom:

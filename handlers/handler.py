@@ -1,4 +1,4 @@
-# handlers/queue.py - Funções Lambda para gerenciar fila
+# handlers/handler.py - Handler único consolidado para gerenciar fila
 
 import json
 import boto3
@@ -6,7 +6,6 @@ import os
 import uuid
 from datetime import datetime, timedelta
 from decimal import Decimal
-import random
 
 # Configuração
 dynamodb = boto3.resource('dynamodb')
@@ -28,7 +27,45 @@ def get_headers():
         'Access-Control-Allow-Methods': 'OPTIONS,POST,GET,PUT,DELETE'
     }
 
-def create(event, context):
+# Handler principal que roteia baseado no método HTTP e path
+def lambda_handler(event, context):
+    """Handler único que gerencia todas as operações da fila"""
+    try:
+        http_method = event['httpMethod']
+        path = event['path']
+        
+        # Roteamento baseado no método HTTP e path
+        if http_method == 'OPTIONS':
+            # Resposta para preflight CORS
+            return {
+                'statusCode': 200,
+                'headers': get_headers(),
+                'body': ''
+            }
+        elif http_method == 'POST' and path.endswith('/queue'):
+            return create_queue_entry(event, context)
+        elif http_method == 'GET' and path.endswith('/queue'):
+            return list_queue_entries(event, context)
+        elif http_method == 'PUT' and '/queue/' in path:
+            return update_queue_entry(event, context)
+        elif http_method == 'DELETE' and '/queue/' in path:
+            return delete_queue_entry(event, context)
+        else:
+            return {
+                'statusCode': 404,
+                'headers': get_headers(),
+                'body': json.dumps({'error': f'Rota não encontrada: {http_method} {path}'})
+            }
+            
+    except Exception as e:
+        print(f"Error in queue_handler: {str(e)}")
+        return {
+            'statusCode': 500,
+            'headers': get_headers(),
+            'body': json.dumps({'error': 'Erro interno do servidor'})
+        }
+
+def create_queue_entry(event, context):
     """Adicionar cliente à fila"""
     try:
         body = json.loads(event['body'])
@@ -70,7 +107,7 @@ def create(event, context):
             'body': json.dumps({'error': 'Erro interno do servidor'})
         }
 
-def list(event, context):
+def list_queue_entries(event, context):
     """Listar clientes na fila"""
     try:
         # Parâmetros opcionais
@@ -124,7 +161,7 @@ def list(event, context):
             'body': json.dumps({'error': 'Erro ao buscar fila'})
         }
 
-def update(event, context):
+def update_queue_entry(event, context):
     """Atualizar status do cliente"""
     try:
         queue_id = event['pathParameters']['id']
@@ -185,7 +222,7 @@ def update(event, context):
             'body': json.dumps({'error': 'Erro ao atualizar'})
         }
 
-def delete(event, context):
+def delete_queue_entry(event, context):
     """Remover cliente da fila"""
     try:
         queue_id = event['pathParameters']['id']
@@ -209,3 +246,5 @@ def delete(event, context):
             'headers': get_headers(),
             'body': json.dumps({'error': 'Erro ao remover'})
         }
+
+
